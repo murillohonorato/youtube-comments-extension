@@ -848,9 +848,10 @@
       u.searchParams.set("order","relevance");
       u.searchParams.set("key",STATE.apiKey);
       if (nextPageToken) u.searchParams.set("pageToken", nextPageToken);
-      const r = await fetch(u.toString());
+      const r = await chrome.runtime.sendMessage({ type: "ytco-fetch", url: u.toString() });
+      if (!r) throw new Error("Extension background worker did not respond. Reload the extension.");
       let data = null;
-      const raw = await r.text();
+      const raw = r.text;
       try { data = raw ? JSON.parse(raw) : null; } catch { data = null; }
       const dataObj = data && typeof data === 'object' ? data : {};
       if (!r.ok) {
