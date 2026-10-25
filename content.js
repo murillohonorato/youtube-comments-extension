@@ -8,7 +8,8 @@
     header: "ytco-header"
   };
 
-  const DEFAULT_API_KEY = "AIzaSyAb6QDZBleKNqkwfEujxiWk0Gk3U2m81xY";
+  // Bring-your-own key: users add their own YouTube Data API key via the ⚙︎ settings.
+  const DEFAULT_API_KEY = "";
 
   const CSS = `
     #${SEL.panel}{position:fixed;top:88px;width:360px;min-width:360px;max-width:360px;z-index:2147483647;background:var(--ytco-bg);color:var(--ytco-fg);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.45);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;border:1px solid var(--ytco-border);overflow:hidden;display:flex;flex-direction:column;max-height:80vh}
@@ -349,6 +350,14 @@
           <button class="ytco-close" id="ytco-settings-close" title="Close">✕</button>
         </div>
         <div class="ytco-setting">
+          <label for="ytco-api-key">YouTube Data API key</label>
+          <div class="ytco-setting-row">
+            <input type="password" id="ytco-api-key" placeholder="Paste your API key" autocomplete="off" spellcheck="false">
+            <button class="ytco-btn" id="ytco-api-key-save" title="Save key">Save</button>
+          </div>
+          <small>Free key from Google Cloud Console (enable YouTube Data API v3). Stored in your browser only.</small>
+        </div>
+        <div class="ytco-setting">
           <label for="ytco-interval">Refresh interval <span id="ytco-interval-label">10s</span></label>
           <input type="range" id="ytco-interval" min="5" max="60" step="1">
         </div>
@@ -397,6 +406,8 @@
     UI.panel = panel;
     UI.settings = panel.querySelector('#ytco-settings');
     UI.controls = {
+      apiKey: panel.querySelector('#ytco-api-key'),
+      apiKeySave: panel.querySelector('#ytco-api-key-save'),
       interval: panel.querySelector('#ytco-interval'),
       intervalLabel: panel.querySelector('#ytco-interval-label'),
       opacity: panel.querySelector('#ytco-opacity'),
@@ -410,6 +421,11 @@
     };
 
     if (UI.controls.closeSettings) UI.controls.closeSettings.addEventListener('click', () => openSettings(false));
+    if (UI.controls.apiKeySave) {
+      const saveKey = () => applyApiKey(UI.controls.apiKey.value);
+      UI.controls.apiKeySave.addEventListener('click', saveKey);
+      UI.controls.apiKey.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveKey(); });
+    }
     if (UI.controls.interval) {
       UI.controls.interval.addEventListener('input', (e) => {
         const sec = Number(e.target.value) || 10;
@@ -510,6 +526,7 @@
 
   function syncSettingsUI() {
     if (!UI.controls) return;
+    if (UI.controls.apiKey) UI.controls.apiKey.value = STATE.apiKeyStored || '';
     const seconds = Math.max(5, Math.round((STATE.intervalMs || 10000) / 1000));
     if (UI.controls.interval) UI.controls.interval.value = seconds;
     if (UI.controls.intervalLabel) UI.controls.intervalLabel.textContent = `${seconds}s`;
